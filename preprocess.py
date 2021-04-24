@@ -13,6 +13,8 @@ import src.visualize.vis_utils as vis
 x_res = 1280
 y_res = 720
 
+GRAY_THRESH = 750_000 # max number of gray pixels to consider frame
+
 DATA_IN_DIR = '1meg'
 IMG_DIR = 'dataset_1meg/images'
 LABELS_DIR = 'dataset_1meg/labels'
@@ -32,6 +34,11 @@ def process(df, psee, bboxes):
         YOLO bounding box format: class x_center y_center width height
         '''
 
+        # Don't try to process this bounding box if the window we consider
+        # ends after the end of the DVS video
+        if (psee.total_time() < bboxtime + win_after):
+            continue
+
         YOLO_label = ''
         frame = np.zeros((y_res, x_res, 3), dtype=np.uint8)
         # frame[:] = 127
@@ -42,6 +49,12 @@ def process(df, psee, bboxes):
         #     frame[event['y'], event['x'], :] += 1
         # frame[win_events['y'], win_events['x'], :] = 255 * win_events['p'][:, None]
         frame = vis.make_binary_histo(win_events, img=frame, width=x_res, height=y_res)
+
+        grayframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray_count = np.count_nonzero(grayframe == 127))
+        # skip this frame
+        if gray_count > GRAY_THRESH:
+            continue
 
         objs = bboxes[bboxes['t'] == bboxtime]
 
