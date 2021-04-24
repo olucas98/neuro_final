@@ -10,20 +10,22 @@ sys.path.append('prophesee-automotive-dataset-toolbox')
 from src.io.psee_loader import PSEELoader
 import src.visualize.vis_utils as vis
 
-x_res = 304
-y_res = 240
+x_res = 1280
+y_res = 720
 
-DATA_IN_DIR = 'data_in_lowres'
-IMG_DIR = 'dataset_lowres/images'
-LABELS_DIR = 'dataset_lowres/labels'
+DATA_IN_DIR = '1meg'
+IMG_DIR = 'dataset_1meg/images'
+LABELS_DIR = 'dataset_1meg/labels'
 
 win_before = 0 # microseconds
 win_after = 50000
 
-classes_index = ['cars', 'pedestrians']
+# classes_index = ['cars', 'pedestrians']
 
 def process(df, psee, bboxes):
-    unique_times = np.unique(bboxes['ts'])
+
+    unique_times = np.unique(bboxes['t'])
+
     # Loop over the labeled times in AER stream
     for framenum, bboxtime in enumerate(unique_times):
         '''
@@ -41,7 +43,7 @@ def process(df, psee, bboxes):
         # frame[win_events['y'], win_events['x'], :] = 255 * win_events['p'][:, None]
         frame = vis.make_binary_histo(win_events, img=frame, width=x_res, height=y_res)
 
-        objs = bboxes[bboxes['ts'] == bboxtime]
+        objs = bboxes[bboxes['t'] == bboxtime]
 
         # Loop over bounding boxes at a labeled time
         for bbox in objs:
@@ -49,19 +51,19 @@ def process(df, psee, bboxes):
             y = bbox['y'] # top left y coord
             w = bbox['w'] # box width
             h = bbox['h'] # box height
-            ts = bbox['ts']
+            ts = bbox['t']
             class_id = bbox['class_id']
 
             # frame = cv2.rectangle(frame, (int(x), int(y)), (int(x+w), int(y+h)), (0,0,255), 2)
 
-            x_center = (x + w//2) / x_res
-            y_center = (y + h//2) / y_res
+            x_center = (x + w/2) / x_res
+            y_center = (y + h/2) / y_res
             width = w / x_res
             height = h / y_res
 
             YOLO_label += f'{class_id} {x_center} {y_center} {width} {height}\n'
         # cv2.imshow('frame', frame)
-        # cv2.waitKey(5000)
+        # cv2.waitKey(1)
         # continue
         cv2.imwrite(os.path.join(IMG_DIR, df+f'_{framenum}.jpg'), frame)
 
@@ -83,3 +85,7 @@ if __name__ == '__main__':
         bboxes = np.load(os.path.join(DATA_IN_DIR, df+'_bbox.npy'))
 
         process(df, psee, bboxes)
+        print('Done with ',df)
+
+        with open('to_delete.txt', 'a+') as to_delete:
+            to_delete.write(os.path.join(DATA_IN_DIR, df+'*'))
