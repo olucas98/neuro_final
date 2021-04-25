@@ -1,8 +1,8 @@
 import numpy as np
 import os
-import argparser
+import argparse
 
-parser = argparser.ArgumentParser()
+parser = argparse.ArgumentParser()
 parser.add_argument('--dir')
 args = parser.parse_args()
 
