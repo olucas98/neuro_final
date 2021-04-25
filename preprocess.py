@@ -74,8 +74,11 @@ def process(df, psee, bboxes):
 
                 # frame = cv2.rectangle(frame, (int(x), int(y)), (int(x+w), int(y+h)), (0,0,255), 2)
 
+                # Create YOLO labels: must be normalized and between 1 and 0
                 x_center = (x + w/2) / x_res
+                x_center = np.clip(x_center, 0, 1)
                 y_center = (y + h/2) / y_res
+                y_center = np.clip(y_center, 0, 1)
                 width = w / x_res
                 height = h / y_res
 
