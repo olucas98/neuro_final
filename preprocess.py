@@ -13,7 +13,9 @@ import src.visualize.vis_utils as vis
 x_res = 1280
 y_res = 720
 
-GRAY_THRESH = 750_000 # max number of gray pixels to consider frame
+GRAY_THRESH = 800_000 # max number of gray pixels to consider frame
+
+SKIP_SIZE = 30 # How many subsequent frames to 'skip' to reduce redundancy
 
 DATA_IN_DIR = '1meg'
 IMG_DIR = 'dataset_1meg/images'
@@ -22,17 +24,24 @@ LABELS_DIR = 'dataset_1meg/labels'
 win_before = 0 # microseconds
 win_after = 50000
 
-# classes_index = ['cars', 'pedestrians']
-
 def process(df, psee, bboxes):
+    '''
+    df: name of data file
+    psee: DVS recording object
+    bboxes: list of bounding boxes
+    '''
 
     unique_times = np.unique(bboxes['t'])
 
+    countdown = 0
     # Loop over the labeled times in AER stream
     for framenum, bboxtime in enumerate(unique_times):
         '''
         YOLO bounding box format: class x_center y_center width height
         '''
+        countdown -= 1
+        if countdown > 0:
+            continue
 
         # Don't try to process this bounding box if the window we consider
         # ends after the end of the DVS video
@@ -41,17 +50,14 @@ def process(df, psee, bboxes):
 
         YOLO_label = ''
         frame = np.zeros((y_res, x_res, 3), dtype=np.uint8)
-        # frame[:] = 127
+
         psee.seek_time(bboxtime-win_before)
         win_events = psee.load_delta_t(win_before+win_after)
-        # frame[win_events['y'], win_events['x'], win_events['p']] += 255
-        # for event in win_events:
-        #     frame[event['y'], event['x'], :] += 1
-        # frame[win_events['y'], win_events['x'], :] = 255 * win_events['p'][:, None]
+        
         frame = vis.make_binary_histo(win_events, img=frame, width=x_res, height=y_res)
 
         grayframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        gray_count = np.count_nonzero(grayframe == 127))
+        gray_count = np.count_nonzero(grayframe == 127)
         # skip this frame
         if gray_count > GRAY_THRESH:
             continue
@@ -75,18 +81,15 @@ def process(df, psee, bboxes):
             height = h / y_res
 
             YOLO_label += f'{class_id} {x_center} {y_center} {width} {height}\n'
-        # cv2.imshow('frame', frame)
-        # cv2.waitKey(1)
-        # continue
+
         cv2.imwrite(os.path.join(IMG_DIR, df+f'_{framenum}.jpg'), frame)
 
         with open(os.path.join(LABELS_DIR, f'{df}_{framenum}.txt'), 'w') as labelfile:
             labelfile.write(YOLO_label)
 
-        # if cv2.waitKey(1) & 0xFF == ord('q'):
-        #     break
+        # After successfully creating a valid frame, skip the next 30 timestamps
+        countdown = SKIP_SIZE
 
-# cv2.destroyAllWindows()
 
 if __name__ == '__main__':
 
