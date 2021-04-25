@@ -17,9 +17,9 @@ GRAY_THRESH = 800_000 # max number of gray pixels to consider frame
 
 SKIP_SIZE = 30 # How many subsequent frames to 'skip' to reduce redundancy
 
-DATA_IN_DIR = '1meg'
-IMG_DIR = 'dataset_1meg/images'
-LABELS_DIR = 'dataset_1meg/labels'
+DATA_IN_DIR = 'test_data'
+IMG_DIR = 'test_data_out/images'
+LABELS_DIR = 'test_data_out/labels'
 
 win_before = 0 # microseconds
 win_after = 50000
@@ -34,6 +34,7 @@ def process(df, psee, bboxes):
     unique_times = np.unique(bboxes['t'])
 
     countdown = 0
+    image_num = 0
     # Loop over the labeled times in AER stream
     for framenum, bboxtime in enumerate(unique_times):
         '''
@@ -82,10 +83,12 @@ def process(df, psee, bboxes):
 
             YOLO_label += f'{class_id} {x_center} {y_center} {width} {height}\n'
 
-        cv2.imwrite(os.path.join(IMG_DIR, df+f'_{framenum}.jpg'), frame)
+        cv2.imwrite(os.path.join(IMG_DIR, df+f'_{image_num}.jpg'), frame)
 
-        with open(os.path.join(LABELS_DIR, f'{df}_{framenum}.txt'), 'w') as labelfile:
+        with open(os.path.join(LABELS_DIR, f'{df}_{image_num}.txt'), 'w') as labelfile:
             labelfile.write(YOLO_label)
+
+        image_num += 1
 
         # After successfully creating a valid frame, skip the next 30 timestamps
         countdown = SKIP_SIZE
