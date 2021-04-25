@@ -5,6 +5,7 @@ Put labels in 'dataset/labels/im0.txt
 
 import numpy as np
 import os, sys
+import argparse
 import cv2
 sys.path.append('prophesee-automotive-dataset-toolbox')
 from src.io.psee_loader import PSEELoader
@@ -16,10 +17,6 @@ y_res = 720
 GRAY_THRESH = 800_000 # max number of gray pixels to consider frame
 
 SKIP_SIZE = 30 # How many subsequent frames to 'skip' to reduce redundancy
-
-DATA_IN_DIR = 'test_data'
-IMG_DIR = 'test_data_out/images'
-LABELS_DIR = 'test_data_out/labels'
 
 win_before = 0 # microseconds
 win_after = 50000
@@ -52,49 +49,64 @@ def process(df, psee, bboxes):
         YOLO_label = ''
         frame = np.zeros((y_res, x_res, 3), dtype=np.uint8)
 
-        psee.seek_time(bboxtime-win_before)
-        win_events = psee.load_delta_t(win_before+win_after)
-        
-        frame = vis.make_binary_histo(win_events, img=frame, width=x_res, height=y_res)
+        try:
+            psee.seek_time(bboxtime-win_before)
+            win_events = psee.load_delta_t(win_before+win_after)
+            
+            frame = vis.make_binary_histo(win_events, img=frame, width=x_res, height=y_res)
 
-        grayframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        gray_count = np.count_nonzero(grayframe == 127)
-        # skip this frame
-        if gray_count > GRAY_THRESH:
-            continue
+            grayframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            gray_count = np.count_nonzero(grayframe == 127)
+            # skip this frame
+            if gray_count > GRAY_THRESH:
+                continue
 
-        objs = bboxes[bboxes['t'] == bboxtime]
+            objs = bboxes[bboxes['t'] == bboxtime]
 
-        # Loop over bounding boxes at a labeled time
-        for bbox in objs:
-            x = bbox['x'] # top left x coord
-            y = bbox['y'] # top left y coord
-            w = bbox['w'] # box width
-            h = bbox['h'] # box height
-            ts = bbox['t']
-            class_id = bbox['class_id']
+            # Loop over bounding boxes at a labeled time
+            for bbox in objs:
+                x = bbox['x'] # top left x coord
+                y = bbox['y'] # top left y coord
+                w = bbox['w'] # box width
+                h = bbox['h'] # box height
+                ts = bbox['t']
+                class_id = bbox['class_id']
 
-            # frame = cv2.rectangle(frame, (int(x), int(y)), (int(x+w), int(y+h)), (0,0,255), 2)
+                # frame = cv2.rectangle(frame, (int(x), int(y)), (int(x+w), int(y+h)), (0,0,255), 2)
 
-            x_center = (x + w/2) / x_res
-            y_center = (y + h/2) / y_res
-            width = w / x_res
-            height = h / y_res
+                x_center = (x + w/2) / x_res
+                y_center = (y + h/2) / y_res
+                width = w / x_res
+                height = h / y_res
 
-            YOLO_label += f'{class_id} {x_center} {y_center} {width} {height}\n'
+                YOLO_label += f'{class_id} {x_center} {y_center} {width} {height}\n'
 
-        cv2.imwrite(os.path.join(IMG_DIR, df+f'_{image_num}.jpg'), frame)
+            cv2.imwrite(os.path.join(IMG_DIR, df+f'_{image_num}.jpg'), frame)
 
-        with open(os.path.join(LABELS_DIR, f'{df}_{image_num}.txt'), 'w') as labelfile:
-            labelfile.write(YOLO_label)
+            with open(os.path.join(LABELS_DIR, f'{df}_{image_num}.txt'), 'w+') as labelfile:
+                labelfile.write(YOLO_label)
 
-        image_num += 1
+            image_num += 1
 
-        # After successfully creating a valid frame, skip the next 30 timestamps
-        countdown = SKIP_SIZE
+            # After successfully creating a valid frame, skip the next 30 timestamps
+            countdown = SKIP_SIZE
+
+        except:
+            print(f'Error when processing {df} with bounding box at time {bboxtime}')
 
 
 if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser('Turn DVS data into event frames')
+    parser.add_argument('--in_dir', help='Point to where all the .dat and .npy files are.')
+    parser.add_argument('--out_dir', help='Where to put the images/ and labels/ outputs')
+    args = parser.parse_args()
+
+    DATA_IN_DIR = args.in_dir
+    IMG_DIR = os.path.join(args.out_dir, 'images')
+    LABELS_DIR = os.path.join(args.out_dir, 'labels')
+    os.makedirs(IMG_DIR, exist_ok=True)
+    os.makedirs(LABELS_DIR, exist_ok=True)
 
     files = os.listdir(DATA_IN_DIR)
     datafiles = [f.split('_td.dat')[0] for f in files if '_td.dat' in f]
