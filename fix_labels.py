@@ -14,5 +14,8 @@ for lf in labelfiles:
 		for line in lines:
 			fields = line.split()
 			print(fields)
+			field[1] = np.clip(field[1], 0, 1)
+			field[2] = np.clip(field[2], 0, 1)
+			print(fields)
 	break
 		
