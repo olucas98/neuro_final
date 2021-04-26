@@ -80,7 +80,9 @@ def process(df, psee, bboxes):
                 y_center = (y + h/2) / y_res
                 y_center = np.clip(y_center, 0, 1)
                 width = w / x_res
+                width = np.clip(width, 0, 1)
                 height = h / y_res
+                height = np.clip(height, 0, 1)
 
                 YOLO_label += f'{class_id} {x_center} {y_center} {width} {height}\n'
 
