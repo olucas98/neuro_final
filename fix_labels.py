@@ -11,11 +11,12 @@ labelfiles = os.listdir(args.dir)
 for lf in labelfiles:
 	with open(os.path.join(args.dir, lf), 'r') as file:
 		lines = file.readlines()
+		labels_out = ''
 		for line in lines:
 			fields = line.split()
-			print(fields)
 			fields[1] = np.clip(float(fields[1]), 0, 1)
 			fields[2] = np.clip(float(fields[2]), 0, 1)
-			print(fields)
+			labels_out.append(' '.join(fields))
+		print(labels_out)
 	break
 		
