@@ -106,8 +106,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     DATA_IN_DIR = args.in_dir
-    IMG_DIR = os.path.join(args.out_dir, 'images')
-    LABELS_DIR = os.path.join(args.out_dir, 'labels')
+    IMG_DIR = args.out_dir
+    LABELS_DIR = IMG_DIR.replace('images', 'labels')
     os.makedirs(IMG_DIR, exist_ok=True)
     os.makedirs(LABELS_DIR, exist_ok=True)
 
