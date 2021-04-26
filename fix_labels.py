@@ -16,7 +16,7 @@ for lf in labelfiles:
 			fields = line.split()
 			fields[1] = np.clip(float(fields[1]), 0, 1)
 			fields[2] = np.clip(float(fields[2]), 0, 1)
-			labels_out.append(' '.join(fields))
+			labels_out += ' '.join(fields) + '\n'
 		print(labels_out)
 	break
 		
