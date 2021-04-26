@@ -16,7 +16,7 @@ for lf in labelfiles:
 		labels_out = ''
 		for line in lines:
 			fields = line.split()
-			for i in range(1, len(fields))
+			for i in range(1, len(fields)):
 				fields[i] = str(np.clip(float(fields[i]), 0, 1))
 			labels_out += ' '.join(fields) + '\n'
 	
