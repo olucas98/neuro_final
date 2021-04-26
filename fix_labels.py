@@ -22,5 +22,4 @@ for lf in labelfiles:
 	
 	with open(os.path.join(args.out_dir, lf), 'w+') as file:
 		file.write(labels_out)
-	break
 		
