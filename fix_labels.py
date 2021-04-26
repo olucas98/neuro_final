@@ -12,7 +12,7 @@ for lf in labelfiles:
 	with open(os.path.join(args.dir, lf), 'r') as file:
 		lines = file.readlines()
 		for line in lines:
-			fields = line.split('')
+			fields = line.split()
 			print(fields)
 	break
 		
