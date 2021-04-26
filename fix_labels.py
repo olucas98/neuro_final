@@ -3,13 +3,15 @@ import os
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dir')
+parser.add_argument('--in_dir')
+parser.add_argument('--out_dir')
 args = parser.parse_args()
 
-labelfiles = os.listdir(args.dir)
+labelfiles = os.listdir(args.in_dir)
+os.makedirs(args.out_dir, exist_ok=True)
 
 for lf in labelfiles:
-	with open(os.path.join(args.dir, lf), 'r') as file:
+	with open(os.path.join(args.in_dir, lf), 'r') as file:
 		lines = file.readlines()
 		labels_out = ''
 		for line in lines:
@@ -17,6 +19,8 @@ for lf in labelfiles:
 			fields[1] = str(np.clip(float(fields[1]), 0, 1))
 			fields[2] = str(np.clip(float(fields[2]), 0, 1))
 			labels_out += ' '.join(fields) + '\n'
-		print(labels_out)
+	
+	with open(os.path.join(args.out_dir, lf), 'w+') as file:
+		file.write(labels_out)
 	break
 		
