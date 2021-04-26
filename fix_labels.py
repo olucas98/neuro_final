@@ -10,5 +10,9 @@ labelfiles = os.listdir(args.dir)
 
 for lf in labelfiles:
 	with open(os.path.join(args.dir, lf), 'r') as file:
-		print(file.read())
-		break
+		lines = file.readlines()
+		for line in lines:
+			fields = line.split('')
+			print(fields)
+	break
+		
