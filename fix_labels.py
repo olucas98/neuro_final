@@ -16,8 +16,8 @@ for lf in labelfiles:
 		labels_out = ''
 		for line in lines:
 			fields = line.split()
-			fields[1] = str(np.clip(float(fields[1]), 0, 1))
-			fields[2] = str(np.clip(float(fields[2]), 0, 1))
+			for i in range(1, len(fields))
+				fields[i] = str(np.clip(float(fields[i]), 0, 1))
 			labels_out += ' '.join(fields) + '\n'
 	
 	with open(os.path.join(args.out_dir, lf), 'w+') as file:
